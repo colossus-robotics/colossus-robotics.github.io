@@ -1,0 +1,1191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Colossus</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="US-made robot joints from self-building factories: one drawing, from the FCC rule to the next cell. Idea stage.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one drawing on drafting paper (a true blueprint in dark mode). The views run down a
+   dashed leader, each tagged like a drafting detail (A, B, C, D) that zooms from the robot into
+   its gear and back out to the cell. Phone: one column. Laptop: drawing and notes side by side. */
+:root{
+  --paper:#F2F6F9;
+  --sheet:rgba(255,255,255,.62);
+  --grid:rgba(30,90,150,.07);
+  --grid-major:rgba(30,90,150,.12);
+  --ink:#12304D;
+  --ink-2:#38556F;
+  --ink-3:#526B84;
+  --line:#9FB3C7;
+  --rule:#CAD7E3;
+  --fill:#E4EBF2;
+  --hatch:#4E6B88;
+  --red:#DB5412;
+  --red-ink:#AB3D06;
+  --red-tint:#F7DDCE;
+  --font-display:"Barlow Condensed","Roboto Condensed","Arial Narrow",sans-serif;
+  --font-body:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"B612 Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D2B4B; --sheet:rgba(7,29,54,.5); --grid:rgba(180,212,248,.065); --grid-major:rgba(180,212,248,.12);
+    --ink:#E2ECF6; --ink-2:#B4C8DC; --ink-3:#90A9C3; --line:#4A6E93; --rule:#24486F; --fill:#143A62;
+    --hatch:#9AB6D2; --red:#FF8A47; --red-ink:#FFA772; --red-tint:#4B3A36; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D2B4B; --sheet:rgba(7,29,54,.5); --grid:rgba(180,212,248,.065); --grid-major:rgba(180,212,248,.12);
+  --ink:#E2ECF6; --ink-2:#B4C8DC; --ink-3:#90A9C3; --line:#4A6E93; --rule:#24486F; --fill:#143A62;
+  --hatch:#9AB6D2; --red:#FF8A47; --red-ink:#FFA772; --red-tint:#4B3A36; color-scheme:dark;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-major) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-major) 1px,transparent 1px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:80px 80px,80px 80px,16px 16px,16px 16px;
+  color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 64px;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:1120px;margin-inline:auto}
+a{color:var(--ink);text-underline-offset:3px}
+button{font:inherit;color:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+svg:focus{outline:none}
+
+/* Title block (sticky) */
+.tb{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--paper);border:1px solid var(--ink);border-top:0}
+.tb-row{display:flex;align-items:center;gap:10px 14px;padding:8px 12px;min-width:0}
+.tb-mark{font:700 19px/1 var(--font-display);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;color:var(--ink)}
+.tb-view{margin-left:auto;display:flex;gap:8px;align-items:baseline;min-width:0;overflow:hidden;font:12px/1.2 var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.tb-view b{color:var(--ink-2);font-weight:700;white-space:nowrap}
+#tbScale{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tb-cells{display:none;font:11px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+@media (min-width:900px){.tb-cells{display:block}}
+
+/* One drawing: the views hang off a dashed leader, each tagged with a detail bubble */
+.draw{position:relative;--rail:72px;--sx:24px;--bub:46px;padding-left:var(--rail);margin-top:48px}
+.draw::before{content:"";position:absolute;left:calc(var(--sx) - .75px);top:14px;bottom:10px;border-left:1.5px dashed var(--ink-3)}
+.draw::after{content:"";position:absolute;left:calc(var(--sx) - 6px);bottom:0;width:12px;height:12px;box-sizing:border-box;border:1.5px solid var(--ink-3);border-radius:50%;background:var(--paper)}
+.view{position:relative;scroll-margin-top:60px}
+.view+.view{margin-top:84px}
+.vh{position:relative;display:grid;gap:6px;min-height:var(--bub);margin-bottom:20px}
+.vh::before{content:"";position:absolute;top:calc(var(--bub) / 2 - .75px);left:calc(var(--sx) - var(--rail) + var(--bub) / 2);width:max(0px,calc(var(--rail) - var(--sx) - var(--bub) / 2 - 8px));border-top:1.5px solid var(--ink-3)}
+.bub{position:absolute;top:0;left:calc(var(--sx) - var(--rail) - var(--bub) / 2);z-index:1;width:var(--bub);height:var(--bub);display:grid;grid-template-rows:1fr 1fr;overflow:hidden;border:1.5px solid var(--ink);border-radius:50%;background:var(--paper);color:var(--ink)}
+.bub b{display:grid;place-items:end center;padding-bottom:2px;border-bottom:1.5px solid var(--ink);font:700 19px/1 var(--font-display)}
+.bub small{display:grid;place-items:start center;padding-top:4px;font:700 9px/1 var(--font-mono);letter-spacing:.02em;color:var(--ink-2)}
+@media (max-width:640px){.bub b{font-size:16px}.bub small{font-size:8px;padding-top:3px}}
+.datum{position:absolute;top:calc(var(--bub) / 2 - 8px);left:calc(var(--sx) - var(--rail) - 8px);z-index:1;width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px var(--paper)}
+.vl{padding-top:calc(var(--bub) / 2 - 8px);font:700 11px/1.3 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+/* Phones: no rail, so the drawings get the full width; short dashed leaders join the views */
+@media (max-width:640px){
+  .draw{--rail:0px;--sx:19px;--bub:38px;padding-left:0;margin-top:36px}
+  .draw::before,.draw::after,.vh::before{display:none}
+  .view+.view{margin-top:64px}
+  .view+.view::before{content:"";position:absolute;left:calc(var(--sx) - .75px);top:-64px;height:64px;border-left:1.5px dashed var(--ink-3)}
+  .vh{padding-left:50px}
+  .vl{font-size:10.5px;letter-spacing:.08em}
+  .meter{padding:10px}
+}
+.vt{margin:0;font:600 clamp(32px,7.4vw,50px)/1.02 var(--font-display);letter-spacing:.005em;text-wrap:balance}
+.vb{display:grid;gap:20px;min-width:0}
+.col{display:grid;gap:18px;align-content:start;min-width:0}
+@media (min-width:900px){
+  .vb{grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);column-gap:44px}
+  .vb>.span{grid-column:1/-1}
+  .vb.flip{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}
+  .vb.flip>.col:first-child{order:2}
+}
+.sub{margin:14px 0 0;padding-top:18px;border-top:1px solid var(--line);font:600 clamp(24px,5.4vw,30px)/1.1 var(--font-display);text-wrap:balance}
+.intro{margin:0;max-width:64ch;color:var(--ink-2)}
+.intro b{color:var(--ink);font-weight:600}
+.fine{margin:0;font-size:13.5px;color:var(--ink-3);max-width:66ch}
+.fig{margin:0;display:grid;gap:10px;min-width:0}
+.fig svg{display:block;width:100%;height:auto;max-width:100%;margin-inline:auto}
+#botSvg{max-width:470px}#jointSvg{max-width:500px}#camSvg{max-width:360px}#cellSvg{max-width:580px}#loopSvg{max-width:520px}
+@media (min-width:900px){#loopSvg{margin-inline:0}}
+figcaption{font-size:13px;line-height:1.45;color:var(--ink-3)}
+.row figcaption{flex:1 1 220px;min-width:0}
+.label{font:700 11px/1.25 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.tag{display:inline-block;padding:4px 8px;border:1px solid var(--ink);font:700 11px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
+.tag-ill{border-style:dashed;color:var(--ink-2);border-color:var(--ink-2)}
+
+/* Takeaway note */
+.takeaway{margin:0;padding-top:12px;border-top:2px solid var(--ink);display:grid;gap:6px}
+.takeaway .tk{font:700 11px/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.takeaway .tx{font:600 clamp(23px,5.6vw,30px)/1.12 var(--font-display);text-wrap:balance}
+
+/* Stamp */
+.stamp{justify-self:start;display:inline-grid;gap:3px;margin:6px 0 4px 4px;padding:8px 12px;border:2px solid var(--ink);box-shadow:0 0 0 3px var(--paper),0 0 0 4px var(--ink);transform:rotate(-1.2deg);font:12px/1.35 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--paper)}
+.stamp strong{font-size:15px;letter-spacing:.24em}
+
+/* Title area */
+.title-area{display:grid;gap:22px;padding-block:28px 4px}
+@media (min-width:900px){.title-area{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);column-gap:56px;align-items:end;padding-block:56px 8px}}
+.ta-main,.ta-side{display:grid;gap:18px;align-content:start;min-width:0}
+.cover-title{margin:0;font:700 clamp(68px,20vw,132px)/.84 var(--font-display);letter-spacing:.03em;text-transform:uppercase}
+.lede{margin:0;font:500 clamp(24px,6vw,36px)/1.15 var(--font-display);max-width:24ch;text-wrap:balance}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.key{display:inline-block;width:24px;height:12px;border:1px solid var(--ink)}
+.key-red{background:var(--red);border-color:var(--red)}
+.key-hatch,.hatch-bg{background:repeating-linear-gradient(135deg,var(--hatch) 0 1.2px,transparent 1.2px 5px)}
+
+/* Controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 14px;border:1px solid var(--ink);border-radius:0;background:var(--paper);color:var(--ink);font:700 12px/1.1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.btn:hover{background:var(--fill)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg .btn{border:0}
+.seg .btn+.btn{border-left:1px solid var(--ink)}
+.ctrl{display:grid;gap:2px;min-width:0}
+.ctrl label{display:flex;align-items:baseline;gap:8px;font-size:14px;line-height:1.35;color:var(--ink-2)}
+.ctrl label span{flex:1 1 auto;min-width:0}
+.ctrl label b{font-family:var(--font-mono);font-size:13px;color:var(--ink)}
+.ctrl output{flex:none;margin-left:auto;font:700 14px/1.2 var(--font-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:34px;margin:0;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-9px;border:2px solid var(--red);border-radius:50%;background:var(--paper)}
+input[type=range]::-moz-range-track{height:2px;background:var(--ink)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border:2px solid var(--red);border-radius:50%;background:var(--paper)}
+.ends{display:flex;justify-content:space-between;font:11px/1 var(--font-mono);color:var(--ink-3);letter-spacing:.04em}
+
+/* Front elevation: robot and meter */
+.parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:560px) and (max-width:899px){.parts{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.chip{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:2px 10px;min-height:52px;padding:8px 10px;border:1px solid var(--line);border-radius:0;background:var(--paper);text-align:left;cursor:pointer}
+.chip:hover{border-color:var(--ink)}
+.chip .sw{grid-row:span 2;width:16px;height:16px;border:1px solid var(--ink);background:repeating-linear-gradient(135deg,var(--hatch) 0 1.2px,transparent 1.2px 5px)}
+.chip .c-name{font-weight:600;font-size:14px;line-height:1.2;min-width:0}
+.chip .c-share{font:12px/1 var(--font-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.chip .c-state{grid-column:2/span 2;font:11px/1.2 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.chip[aria-pressed="true"]{border-color:var(--red)}
+.chip[aria-pressed="true"] .sw{background:var(--red);border-color:var(--red)}
+.chip[aria-pressed="true"] .c-state{color:var(--red-ink)}
+.meter{display:grid;gap:10px;padding:12px;border:1px solid var(--line);background:var(--paper);min-width:0}
+.meter-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.verdict{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 14px;align-items:center}
+.big{font:600 46px/1 var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.verdict .vt2{font-weight:600;line-height:1.3}
+.verdict .vs{grid-column:2;font-size:13px;color:var(--ink-3)}
+.notes{margin:0;padding:0;list-style:none;counter-reset:n;display:grid;gap:6px;font-size:14px;color:var(--ink-2)}
+.notes li{counter-increment:n;display:grid;grid-template-columns:2em minmax(0,1fr);gap:4px}
+.notes li::before{content:counter(n) ".";font:12px/1.6 var(--font-mono);color:var(--ink-3)}
+.terms{margin:0;display:grid;gap:4px;padding-left:10px;border-left:2px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.terms b{color:var(--ink);font-weight:600}
+
+/* SVG drawing classes */
+svg text{font-family:var(--font-body);font-size:12px;fill:var(--ink)}
+svg .mono{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em}
+svg .t2{fill:var(--ink-2)}
+svg .t3{fill:var(--ink-3)}
+svg .tr{fill:var(--red-ink)}
+svg .tb{font-weight:600}
+svg .cap{text-transform:uppercase;letter-spacing:.08em}
+.sk{stroke:var(--ink)} .sk2{stroke:var(--ink-2)} .sk3{stroke:var(--ink-3)} .skl{stroke:var(--line)} .skr{stroke:var(--red)} .skp{stroke:var(--paper)}
+.fp{fill:var(--paper)} .ff{fill:var(--fill)} .fr{fill:var(--red)} .ft{fill:var(--red-tint)} .fi{fill:var(--ink)} .fi2{fill:var(--ink-2)} .fn{fill:none}
+.hl{stroke:var(--hatch);stroke-width:1.1}
+.hbg{fill:var(--paper)}
+.bot .cat{cursor:pointer}
+.bot .pf{stroke:var(--ink);stroke-width:1.3}
+.bot .pw{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.bot .cat:hover .pf{stroke-width:2.2}
+.bot .is-us .pf{fill:var(--red-tint);stroke:var(--red);stroke-width:1.8}
+.bot .is-us .pw{stroke:var(--red)}
+.mb{transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+.thl{transition:transform .5s cubic-bezier(.3,.7,.2,1)}
+.fade{transition:opacity .35s}
+@media (prefers-reduced-motion:reduce){.mb,.thl,.fade{transition:none}}
+
+/* Details A and B: joint and gear */
+.joint-col{display:grid;gap:12px}
+.cam-key{margin:0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px;color:var(--ink-2)}
+.cam-key li{display:flex;gap:8px;align-items:baseline}
+.cam-key i{flex:none;width:10px;height:10px;border:1.5px solid var(--red);transform:translateY(1px)}
+
+/* View C: the cell */
+.bom{border-collapse:collapse;width:100%;font-size:14px}
+.bom caption{text-align:left;padding-bottom:6px}
+.bom th,.bom td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+.bom th{font:700 11px/1.2 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);background:var(--fill)}
+.bom td.q{width:3.6em;text-align:center;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.count{font:600 15px/1.2 var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* Detail D: the loop */
+.status{margin:0;padding:10px 12px;border:1px solid var(--line);background:var(--paper);display:grid;gap:4px}
+.status .r{font:600 15px/1.3 var(--font-body)}
+.status .s{font-size:13.5px;color:var(--ink-2)}
+.caveat{margin:0;padding:10px 12px;border:1px dashed var(--ink-2);font-size:14px;color:var(--ink-2)}
+.caveat b{color:var(--ink)}
+
+/* Detail D: closure */
+.closure{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;align-items:stretch}
+.ladder{display:flex;flex-direction:column-reverse;border-left:3px solid var(--ink);border-right:3px solid var(--ink);padding:6px 0}
+.rung,.rung-fixed{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:0 10px;align-items:center;flex:1 0 auto;min-height:50px;margin:0;padding:6px 10px;border:0;border-top:2px solid var(--ink);background:transparent;text-align:left}
+.rung{cursor:pointer}
+.rung:hover{background:var(--fill)}
+.rung .sw,.rung-fixed .sw{width:14px;height:14px;border:1px solid var(--ink);background:repeating-linear-gradient(135deg,var(--hatch) 0 1.2px,transparent 1.2px 5px)}
+.rung[aria-pressed="true"] .sw{background:var(--red);border-color:var(--red)}
+.rung .rn,.rung-fixed .rn{display:grid;min-width:0}
+.rung .rn b,.rung-fixed .rn b{font-size:14px;line-height:1.2;font-weight:600}
+.rung .rn small,.rung-fixed .rn small{font-size:12px;line-height:1.25;color:var(--ink-3)}
+.rung .rs,.rung-fixed .rs{font:12px var(--font-mono);color:var(--ink-2);font-variant-numeric:tabular-nums}
+.rung-fixed{color:var(--ink-2)}
+.ladder>:last-child{border-top:0}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stat{display:grid;gap:2px;align-content:start;padding:10px 12px;background:var(--paper);min-width:0}
+.stat .k{font:700 10.5px/1.3 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font:600 34px/1.05 var(--font-display);font-variant-numeric:tabular-nums}
+.stat .u{font-size:12.5px;line-height:1.35;color:var(--ink-2)}
+.stat.wide{grid-column:1/-1}
+.fm{font-family:var(--font-mono);font-size:12px;letter-spacing:.02em;white-space:nowrap}
+@media (max-width:420px){.stat .v{font-size:30px}}
+.mini{height:10px;border:1px solid var(--ink);background:var(--paper);margin-top:4px}
+.mini i{display:block;height:100%;background:var(--ink-2);transition:width .4s}
+
+/* Close: gates and sources */
+.gates{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.gates li{display:grid;grid-template-columns:5.4em minmax(0,1fr);gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.gates .g{font:700 12px/1.5 var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.gates .gt{display:grid;gap:2px;font:500 19px/1.3 var(--font-display);letter-spacing:.01em}
+.gates .gt small{font:11px/1.3 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.sources{display:grid;gap:8px;font-size:13.5px;color:var(--ink-2)}
+.sources ol{margin:0;padding-left:1.4em;display:grid;gap:4px}
+/* Plain-language helpers */
+.steps{margin:0;padding:0;list-style:none;counter-reset:st;display:grid;gap:10px;max-width:54ch}
+.steps li{counter-increment:st;display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;font-size:15.5px;line-height:1.45;color:var(--ink-2)}
+.steps li::before{content:counter(st);display:grid;place-items:center;width:24px;height:24px;border:1.5px solid var(--ink);border-radius:50%;font:700 12px/1 var(--font-mono);color:var(--ink)}
+.steps b{color:var(--ink);font-weight:600}
+.steps-sm li{font-size:14px}
+.how{margin:0;font-size:13.5px;color:var(--ink-2)}
+.how b{color:var(--ink)}
+.plain{margin:0;font-size:15px;line-height:1.5;color:var(--ink-2)}
+.plain b{color:var(--ink)}
+
+/* Closure on narrow phones: the ladder takes the full width and a flat bar replaces the tall one */
+.hbar{display:none;gap:6px;grid-column:1/-1}
+.hb-track{position:relative;height:22px;border:1.5px solid var(--ink);background:var(--paper)}
+.hb-track i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--red);transition:width .35s}
+.hb-track s{position:absolute;right:0;top:0;bottom:0;width:25%;border-left:1px solid var(--ink);background:repeating-linear-gradient(135deg,var(--hatch) 0 1.2px,transparent 1.2px 5px)}
+.hb-track b{position:absolute;left:40%;top:-6px;bottom:-6px;border-left:2px dashed var(--ink)}
+.hb-lab{position:relative;display:flex;justify-content:space-between;font:11px/1.2 var(--font-mono);color:var(--ink-3)}
+.hb-lab .g{position:absolute;left:40%;transform:translateX(-50%);color:var(--ink);font-weight:700;white-space:nowrap}
+@media (max-width:440px){.closure{grid-template-columns:minmax(0,1fr)}#barSvg{display:none}.hbar{display:grid}}
+@media (prefers-reduced-motion:reduce){.hb-track i{transition:none}}
+svg .halo{paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.tb-mark{display:inline-flex;align-items:center;min-height:28px}
+/* Detail D: gate chips and stats */
+.stats{grid-template-columns:minmax(0,1fr)}
+.gate-chip{display:inline-flex;align-items:center;gap:8px;margin-top:6px;font-size:13.5px;color:var(--ink-2)}
+.gate-chip i{flex:none;width:11px;height:11px;transform:rotate(45deg);border:1.5px solid var(--ink)}
+.gate-chip.met{color:var(--ink);font-weight:600}
+.gate-chip.met i{background:var(--ink)}
+.first{margin:0;display:grid;gap:4px;padding:10px 12px;border:1.5px solid var(--red);font:500 19px/1.3 var(--font-display)}
+.first .label{color:var(--red-ink)}
+svg .bl{font-family:var(--font-display);font-weight:700;font-size:14px}
+.det{pointer-events:none}
+
+/* Close: the gates, sources and a real title block */
+.close{margin-top:88px;padding-top:22px;border-top:2px solid var(--ink);scroll-margin-top:60px}
+.close .vt{margin-bottom:-4px}
+.tblock{margin-top:40px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.5px;background:var(--ink);border:1.5px solid var(--ink)}
+.tblock>div{display:grid;gap:3px;align-content:start;padding:8px 10px;background:var(--paper);min-width:0;font-size:14px;line-height:1.3}
+.tblock .tbk-name{grid-column:1/3;align-content:center;font:700 clamp(22px,6.4vw,34px)/1 var(--font-display);letter-spacing:.16em;text-transform:uppercase}
+.tblock .tbk-title{grid-column:3/5}
+.tblock .k{font:700 10px/1.2 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+@media (max-width:420px){.tblock>div{padding:7px 8px;font-size:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="tb" aria-label="Title block">
+  <div class="tb-row">
+    <a class="tb-mark" href="#top">Colossus</a>
+    <span class="tb-cells">Preliminary · Idea stage · No prototype, no customers</span>
+    <span class="tb-view"><b id="tbView">Sheet 1 of 1</b><span id="tbScale">Idea stage</span></span>
+  </div>
+</header>
+
+<main id="top">
+<section class="title-area" data-view="Sheet 1 of 1" data-scale="Idea stage">
+  <div class="ta-main">
+    <p class="stamp" role="note"><strong>Preliminary</strong><span>Idea stage</span><span>No prototype · No customers</span></p>
+    <h1 class="cover-title">Colossus</h1>
+    <p class="lede">US-made robot joints from self-building factories.</p>
+  </div>
+  <div class="ta-side">
+    <ol class="steps" aria-label="The idea in three steps">
+      <li><span><b>The rule.</b> Since July 28, 2026, a new humanoid or other mobile robot can’t get the FCC authorization it needs to be sold in the US unless it’s built here with more than 65% US-made parts by cost, or gets a Conditional Approval from the Department of War.</span></li>
+      <li><span><b>The part.</b> Joints are about half the cost of a humanoid’s parts, and the gear inside each joint is the hardest part to get.</span></li>
+      <li><span><b>The plan.</b> Make US joints in small, identical factory cells that also build parts for the next cell, so capacity compounds.</span></li>
+    </ol>
+    <div class="legend" aria-label="Legend"><span><i class="key key-red"></i>Made by us, or moving</span><span><i class="key key-hatch"></i>Bought or foreign</span></div>
+    <p class="fine">One drawing: it zooms from a robot into one joint and its gear, then out to the cell that would make it. Tap the parts and drag the sliders. Numbers that aren’t sourced are labeled illustrative.</p>
+  </div>
+</section>
+
+<div class="draw">
+
+<section class="view" id="v-robot" data-view="Elevation" data-scale="1:20">
+  <div class="vh"><span class="datum" aria-hidden="true"></span><span class="vl">Front elevation · Scale 1:20</span><h2 class="vt">The robot that can’t be sold here</h2></div>
+  <div class="vb">
+    <p class="intro span">On July 28, 2026, the FCC added foreign-produced humanoids, quadrupeds (robot dogs) and other mobile robots to its <b>Covered List</b> of equipment judged a national-security risk; fixed industrial arms aren’t on it. A new model now needs FCC authorization to be imported, marketed or sold in the US. It can get one as a <b>domestic end product</b> (built here, with US-made parts above 65% of its parts cost) or with a Conditional Approval. A robot assembled here from mostly foreign parts still counts as foreign. From 2029, the bar rises to 75%.</p>
+    <div class="col">
+      <figure class="fig">
+        <svg id="botSvg" class="bot" viewBox="0 0 360 304" role="img" aria-label="Front view of a humanoid. Its parts are grouped by share of component cost: joints 50%, sensing 14%, compute 12%, structure 7%, battery 7%, other 10%. All start foreign. Circle A marks the right shoulder joint."></svg>
+        <figcaption>Tap a part, or a button below, to switch it from foreign to US-made. Shares of the robot’s parts cost: an illustrative split within McKinsey’s ranges. Circle A marks a shoulder joint, drawn larger below.</figcaption>
+      </figure>
+      <div class="parts" role="group" aria-label="Make a part US-made">
+        <button class="chip" type="button" data-cat="joints" aria-pressed="false"><i class="sw"></i><span class="c-name">Joints</span><span class="c-share">50%</span><span class="c-state">Foreign</span></button>
+        <button class="chip" type="button" data-cat="sensing" aria-pressed="false"><i class="sw"></i><span class="c-name">Sensing</span><span class="c-share">14%</span><span class="c-state">Foreign</span></button>
+        <button class="chip" type="button" data-cat="compute" aria-pressed="false"><i class="sw"></i><span class="c-name">Compute</span><span class="c-share">12%</span><span class="c-state">Foreign</span></button>
+        <button class="chip" type="button" data-cat="structure" aria-pressed="false"><i class="sw"></i><span class="c-name">Structure</span><span class="c-share">7%</span><span class="c-state">Foreign</span></button>
+        <button class="chip" type="button" data-cat="battery" aria-pressed="false"><i class="sw"></i><span class="c-name">Battery</span><span class="c-share">7%</span><span class="c-state">Foreign</span></button>
+        <button class="chip" type="button" data-cat="other" aria-pressed="false"><i class="sw"></i><span class="c-name">Other</span><span class="c-share">10%</span><span class="c-state">Foreign</span></button>
+      </div>
+    </div>
+    <div class="col">
+      <div class="meter">
+        <div class="meter-head"><span class="label">Domestic component cost</span>
+          <div class="seg" role="group" aria-label="Which rule"><button class="btn" type="button" id="th65" aria-pressed="true">65% · now</button><button class="btn" type="button" id="th75" aria-pressed="false">75% · from 2029</button></div>
+        </div>
+        <svg id="meterSvg" viewBox="0 0 360 106" role="img" aria-label="Meter: US-made share of component cost against the FCC threshold."></svg>
+        <p class="how">Add up what every part costs. The US-made share has to be <b>more than</b> the line.</p>
+        <div class="verdict" aria-live="polite"><span class="big" id="domPct">0%</span><span class="vt2" id="verdictT">Below the line.</span><span class="vs" id="verdictS">Needs more than 65%.</span></div>
+      </div>
+      <ol class="notes">
+        <li>The test counts component cost. Final-assembly labor doesn’t count.</li>
+        <li>A component made in the US counts in full: its purchase price, or, if we make it, its cost to make (not counting profit).</li>
+        <li>There is no allied-country carve-out. A Japanese or Korean part counts as foreign.</li>
+        <li>Models authorized before July 28, 2026 can still be sold, but they’re frozen: no hardware changes.</li>
+        <li>Conditional Approvals come from the Department of War (the Pentagon). Seven makers had one by late October 2026, each tied to a plan to move production to the US. Either path pushes robot makers toward US production.</li>
+        <li>A Morgan Stanley estimate, cited by McKinsey, says building Tesla’s Optimus Gen 2 without Chinese suppliers would nearly triple its bill of materials (the cost of its parts).</li>
+      </ol>
+      <p class="takeaway"><span class="tk">Note</span><span class="tx">With foreign joints the ceiling is 50%. No US joints, no US-made robot.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-joint" data-view="Detail A" data-scale="1:2">
+  <div class="vh"><span class="bub" aria-hidden="true"><b>A</b><small>1:2</small></span><span class="vl">Detail A · Scale 1:2 · Exploded view</span><h2 class="vt">The joint</h2></div>
+  <div class="vb">
+    <div class="col">
+      <figure class="fig">
+        <svg id="jointSvg" viewBox="0 0 360 372" role="img" aria-label="Exploded view of the joint, top to bottom: driver board, encoders, frameless motor, wave generator, flexspline, ring gear, output bearing. The three gear parts would be ours; the rest are bought. Circle B marks the gear."></svg>
+        <div class="ctrl"><label for="explode"><span>Assemble or explode the joint</span><output id="explodeOut" for="explode">Exploded</output></label><input type="range" id="explode" min="0" max="100" value="100"><div class="ends" aria-hidden="true"><span>Assembled</span><span>Exploded</span></div></div>
+        <figcaption>Drag the slider to pull the joint apart. Orange parts are the gear we’d make; hatched parts are bought. Shares of the joint’s cost: McKinsey, April 2026. Circle B marks the gear, drawn from above below.</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <p class="intro">Our first product would be a <b>strain-wave rotary joint</b> for humanoid shoulders and elbows, like the one circled on the robot. It packs the gear, a frameless motor (a bare rotor and stator), encoders (angle sensors) and a driver (the control board) into one module, with an output bearing that carries the load.</p>
+      <p class="intro">We’d cut and heat-treat the gear in the US and buy the rest. The driver and bearing are <b>vitamins</b>, parts we’ll keep buying for good. The motor and encoders are bought for now.</p>
+      <p class="takeaway"><span class="tk">Note</span><span class="tx">The gear is 30–50% of the joint’s cost and the hardest part to source.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-gear" data-view="Detail B" data-scale="1:1">
+  <div class="vh"><span class="bub" aria-hidden="true"><b>B</b><small>1:1</small></span><span class="vl">Detail B · Scale 1:1 · Top view</span><h2 class="vt">The gear</h2></div>
+  <div class="vb flip">
+    <div class="col">
+      <figure class="fig">
+        <svg id="camSvg" viewBox="0 0 280 292" role="img" aria-label="Top view of the strain-wave gear. An oval cam turns inside a thin toothed cup and bends it so its teeth mesh with a fixed toothed ring at two points. The cup turns slowly the other way."></svg>
+        <div class="row"><button class="btn" type="button" id="camPlay">Pause</button><span class="label">How the gear works</span></div>
+        <figcaption>Drawn with 30 teeth on the cup and 32 on the ring, so the cam turns 15 times for each turn of the cup. Simplified: real gears have far more teeth, for ratios of about 30:1 to 320:1.</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <ol class="steps steps-sm">
+        <li><span>The motor spins the oval cam fast.</span></li>
+        <li><span>The cam bends the thin, toothed cup into an oval, so its teeth mesh with the fixed ring at two spots.</span></li>
+        <li><span>The cup has 2 fewer teeth than the ring, so each spin of the cam moves the cup back by 2 teeth.</span></li>
+        <li><span>Fast, weak spin goes in; slow, strong turning comes out. That is what a robot joint needs.</span></li>
+      </ol>
+      <p class="intro">US robot makers are short of gears. Precision robot gears come from a few makers: Harmonic Drive and Nabtesco in Japan, Leaderdrive in China. They take great precision and costly equipment to make, and they are harder to scale than electronics (McKinsey).</p>
+      <p class="intro">Some are made here already: Cone Drive sells US-made strain-wave gearing from Michigan, and Harmonic Drive has a US plant in Massachusetts. Schaeffler plans formed (pressed, not cut) strain-wave gears at scale from 2027, starting in Germany. Our bet is capacity: identical cells that help build the next cell should add capacity faster than one conventional plant.</p>
+      <p class="fine">That shortage is why we’d make the gear here. On our reading of the federal definitions, a joint built in the US counts in full as a US-made component, even with an imported gear inside, so the rule alone doesn’t require a US gear. The FCC hasn’t ruled on this.</p>
+      <p class="takeaway"><span class="tk">Note</span><span class="tx">This is the part we’d make: cut and heat-treated in the US.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-cell" data-view="View C" data-scale="1:100">
+  <div class="vh"><span class="bub" aria-hidden="true"><b>C</b><small>1:100</small></span><span class="vl">View C · Scale 1:100 · Plan view</span><h2 class="vt">The cell that would make it</h2></div>
+  <div class="vb">
+    <p class="intro span">Pull back from the gear to the floor it would be made on. A production cell would be one machining center, one gear-cutting station, one heat-treat furnace, two robot arms that load the machines and assemble joints, and one inspection and test station.</p>
+    <div class="col">
+      <figure class="fig">
+        <svg id="cellSvg" viewBox="0 0 380 330" role="img" aria-label="Top view of one cell. A blank moves from the inbound rack through machining, gear cutting, heat treat, assembly with a bought motor, encoders, driver and bearing, and inspection, then leaves as a joint. Two arms carry it between stations. Circle D marks arm 1."></svg>
+        <div class="row"><button class="btn" type="button" id="cellPlay">Pause</button><span class="count">Joints out: <span id="cellCount">0</span></span><span class="fine">(animation count)</span></div>
+        <figcaption>Follow the orange part. A blank (a rough piece of metal) comes in, gets machined (1), has its gear teeth cut (2), is hardened in the furnace (3), gets the bought motor, encoders, driver and bearing added (4), and is tested (5) before it leaves as a finished joint. The two arms do all the carrying. Hatched boxes are bought parts.</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <table class="bom">
+        <caption class="label">Cell kit · parts list</caption>
+        <thead><tr><th>Qty</th><th>Item</th><th>Job</th></tr></thead>
+        <tbody>
+          <tr><td class="q">1</td><td>Machining center</td><td>Machines the blank</td></tr>
+          <tr><td class="q">1</td><td>Gear-cutting station</td><td>Cuts the gear teeth</td></tr>
+          <tr><td class="q">1</td><td>Heat-treat furnace</td><td>Hardens the gear</td></tr>
+          <tr><td class="q">2</td><td>Robot arms</td><td>Load the machines and assemble joints</td></tr>
+          <tr><td class="q">1</td><td>Inspection and test station</td><td>Inspects and tests joints</td></tr>
+        </tbody>
+      </table>
+      <p class="intro">Every cell would be identical, like a recipe: to add capacity, we’d build one more from the same kit. Circle D marks one of the cell’s two arms, which would move on joints like the one in Detail A.</p>
+      <p class="takeaway"><span class="tk">Note</span><span class="tx">One cell, five stations, two arms. Every cell is identical, so capacity is a kit.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-next" data-view="Detail D" data-scale="1:100">
+  <div class="vh"><span class="bub" aria-hidden="true"><b>D</b><small>1:100</small></span><span class="vl">Detail D · Scale 1:100 · One new cell</span><h2 class="vt">The next cell</h2></div>
+  <div class="vb">
+    <p class="intro span">A cell’s arms would run on joints like ours, so a cell could make part of the next cell itself. Each joint would go one of two ways. <b>Sold</b> joints bring in cash, which buys the parts we can’t make yet. <b>Kept</b> joints go into the next cell’s arms. When the kit is full, it becomes a new cell.</p>
+    <figure class="fig span">
+      <svg id="loopSvg" viewBox="0 0 360 150" role="img" aria-label="A loop: a cell makes joints. Some joints are sold to robot makers. The rest build the next cell, which then makes joints too."></svg>
+      <div class="row"><button class="btn" type="button" id="loopPlay">Pause</button><span class="tag tag-ill">Illustrative</span><figcaption>Orange dots are joints. Here four kept joints fill a new cell. Not to scale: a real cell’s two six-axis arms use about 12 joints.</figcaption></div>
+    </figure>
+    <p class="caveat span"><b>Caveat.</b> A joint we keep is one we don’t sell. Keeping it saves cash only when we have spare capacity, or when the part can’t be bought.</p>
+    <h3 class="sub span">How much of the next cell our cells make</h3>
+    <p class="intro span"><b>Closure</b> is the share of a new cell’s value that our own cells make. Each rung of the ladder is one more thing the cells learn to make for the next cell. Tap a rung to bring it in-house, or climb them all. Vitamins stay bought.</p>
+    <div class="col">
+      <div class="closure">
+        <div class="ladder" role="group" aria-label="Closure ladder, bottom rung first">
+          <button class="rung" type="button" data-i="0" aria-pressed="false"><i class="sw"></i><span class="rn"><b>Structure</b><small>frames, fixtures, arm links</small></span><span class="rs">18%</span></button>
+          <button class="rung" type="button" data-i="1" aria-pressed="false"><i class="sw"></i><span class="rn"><b>Joints</b><small>our own joints</small></span><span class="rs">15%</span></button>
+          <button class="rung" type="button" data-i="2" aria-pressed="false"><i class="sw"></i><span class="rn"><b>Arm assembly</b><small>from our joints and links</small></span><span class="rs">9%</span></button>
+          <button class="rung" type="button" data-i="3" aria-pressed="false"><i class="sw"></i><span class="rn"><b>Linear axes</b><small>straight-line motion</small></span><span class="rs">14%</span></button>
+          <button class="rung" type="button" data-i="4" aria-pressed="false"><i class="sw"></i><span class="rn"><b>Machine-tool modules</b><small>parts of machine tools</small></span><span class="rs">19%</span></button>
+          <div class="rung-fixed"><i class="sw"></i><span class="rn"><b>Vitamins</b><small>bought for good</small></span><span class="rs">25%</span></div>
+        </div>
+        <div class="hbar" aria-hidden="true"><div class="hb-track"><i id="clHb"></i><s></s><b></b></div><div class="hb-lab"><span>0%</span><span class="g">Gate 2 · 40%</span><span>Vitamins 25%</span></div></div>
+        <svg id="barSvg" viewBox="0 0 150 380" role="img" aria-label="Stacked bar of a new cell’s value, bottom to top: structure 18%, joints 15%, arm assembly 9%, linear axes 14%, machine-tool modules 19%, vitamins 25%. Gate 2 is marked at 40%."></svg>
+      </div>
+      <div class="row"><button class="btn" type="button" id="clAll">Climb every rung</button><button class="btn" type="button" id="clReset">Reset</button><span class="tag tag-ill">Illustrative shares</span></div>
+    </div>
+    <div class="col">
+      <div class="stats" aria-live="polite">
+        <div class="stat"><span class="k">Made in-house · c</span><span class="v" id="clC">0%</span><span class="u" id="clSeq">Tap the bottom rung to start.</span><span class="gate-chip" id="g2"><i></i><span>Gate 2 needs 40% or more</span></span></div>
+        <div class="stat"><span class="k">Cash cost of the next cell</span><span class="v" id="clCash">100%</span><span class="u">of buying it outright, if our own parts cost us half their market price (m = 50%) · <span class="fm">(1 − c) + c × m</span> <span class="fm" id="clF">= (1 − 0) + 0 × 0.5 = 1</span></span><div class="mini" aria-hidden="true"><i id="clMini" style="width:100%"></i></div></div>
+      </div>
+      <p class="fine">c is the share of a new cell our cells make; m is what those parts cost us in cash, as a share of market price. m = 50% is illustrative.</p>
+      <p class="fine"><b>Why not 100%?</b> Vitamins such as chips and magnets come from huge, specialized plants. Buying them costs far less than building those plants, so they stay bought.</p>
+      <p class="takeaway"><span class="tk">Note</span><span class="tx">Each rung the cell learns cuts what the next cell costs in cash.</span></p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<section class="close" id="v-close" data-view="Notes" data-scale="Gates">
+  <div class="vb">
+    <div class="col">
+      <h2 class="vt">Four gates</h2>
+      <p class="intro">The plan runs in phases. Each phase ends at a gate: a fact that has to become true before the next one starts.</p>
+      <p class="first"><span class="label">First milestone</span><span>A strain-wave gear cut and heat-treated in the US, built into a joint that passes testing.</span></p>
+      <ol class="gates">
+        <li><span class="g">Gate 1</span><span class="gt">Three paying robot makers.<small>Phase 1 · selling joints</small></span></li>
+        <li><span class="g">Gate 2</span><span class="gt">One cell builds 40%+ of a new cell’s value.<small>Phase 2 · self-built cells</small></span></li>
+        <li><span class="g">Gate 3</span><span class="gt">Capacity doubles in 18 months or less on operating cash.<small>Phase 3 · American arms</small></span></li>
+        <li><span class="g">Gate 4</span><span class="gt">Cells make their own linear axes and some machine-tool modules.<small>Phase 4 · a network of cells</small></span></li>
+      </ol>
+      <p class="fine">After that: seed factories, small units that start production from local materials.</p>
+      <p class="stamp" role="note"><strong>Preliminary</strong><span>Idea stage</span><span>No prototype · No customers</span></p>
+    </div>
+    <div class="col">
+      <div class="sources">
+        <span class="label">Sources</span>
+        <ol>
+          <li>FCC, “FAQs on Recent Updates to FCC Covered List Regarding Foreign-Produced Advanced Robotic Devices and Power Inverters,” updated August 20, 2026, accessed October 2026. Scope, dates and the 65% test. <a href="https://www.fcc.gov/covered-list-faqs-robots-inverters" target="_blank" rel="noopener">fcc.gov/covered-list-faqs-robots-inverters</a></li>
+          <li>McKinsey &amp; Company, “Turning humanoid supply chain constraints into billion-dollar wins,” April 17, 2026. Cost ranges for the robot and the joint, gear supply, and the Morgan Stanley Optimus estimate. <a href="https://www.mckinsey.com/industries/industrials/our-insights/turning-humanoid-supply-chain-constraints-into-billion-dollar-wins" target="_blank" rel="noopener">mckinsey.com</a></li>
+          <li>Federal Acquisition Regulation 52.225-1, definitions of “domestic end product” and “cost of components.” <a href="https://www.acquisition.gov/far/52.225-1" target="_blank" rel="noopener">acquisition.gov/far/52.225-1</a></li>
+          <li>Legal 500, “FCC announces further Covered List Conditional Approvals,” October 26, 2026. The seven robot makers with Conditional Approvals and their onshoring conditions. <a href="https://www.legal500.com/intelligence/united-states/government-public-sector/fcc-announces-further-covered-list-conditional-approvals-providing-a-path-for-us-market-access" target="_blank" rel="noopener">legal500.com</a></li>
+          <li>US gear makers: Cone Drive, “Robot gears for the humanoid robot industry” (<a href="https://conedrive.com/humanoid-robot-industry/" target="_blank" rel="noopener">conedrive.com</a>); Harmonic Drive LLC, Beverly, Massachusetts manufacturing facility (<a href="https://www.automate.org/news/harmonic-drive-llc-opens-new-us-headquarters-in-beverly-ma" target="_blank" rel="noopener">automate.org</a>); Schaeffler’s formed strain-wave gearboxes, The Robot Report, August 21, 2026 (<a href="https://www.therobotreport.com/schaeffler-plans-to-mass-manufacture-gearboxes-for-humanoids-in-2027/" target="_blank" rel="noopener">therobotreport.com</a>).</li>
+        </ol>
+        <p class="fine">Numbers labeled illustrative are ours: the robot cost split (within McKinsey’s ranges), the four-joint kit in the loop, the closure shares, and the 50% in-house cost (m).</p>
+      </div>
+    </div>
+  </div>
+  <footer class="tblock" aria-label="Drawing title block">
+    <div class="tbk-name">Colossus</div>
+    <div class="tbk-title"><span class="k">Title</span><span>US-made robot joints from self-building factories</span></div>
+    <div><span class="k">Status</span><span>Preliminary · idea stage</span></div>
+    <div><span class="k">Drawn</span><span>Oct 2026</span></div>
+    <div><span class="k">Scale</span><span>As noted</span></div>
+    <div><span class="k">Sheet</span><span>1 of 1</span></div>
+  </footer>
+</section>
+</main>
+</div>
+<script>
+(() => {
+'use strict';
+const NS = 'http://www.w3.org/2000/svg';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+document.documentElement.lang = document.documentElement.lang || 'en';
+const RM = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const TAU = Math.PI * 2;
+
+function S(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) if (attrs[k] !== undefined && attrs[k] !== null) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function T(parent, x, y, str, cls, anchor) {
+  const t = S('text', { x, y, class: cls || '', 'text-anchor': anchor || 'start' }, parent);
+  t.textContent = str;
+  return t;
+}
+function hatch(svg, id) {
+  const defs = S('defs', null, svg);
+  const p = S('pattern', { id, width: 5, height: 5, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+  S('rect', { width: 5, height: 5, class: 'hbg' }, p);
+  S('line', { x1: 0, y1: 0, x2: 0, y2: 5, class: 'hl' }, p);
+  return defs;
+}
+function bez(p0, c, p1, t) {
+  const u = 1 - t;
+  return [u * u * p0[0] + 2 * u * t * c[0] + t * t * p1[0], u * u * p0[1] + 2 * u * t * c[1] + t * t * p1[1]];
+}
+
+/* One animation loop for the whole page; each drawing runs only while on screen. */
+const anims = [];
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => {
+  es.forEach(en => anims.forEach(a => { if (a.el === en.target) a.visible = en.isIntersecting; }));
+}, { rootMargin: '120px 0px' }) : null;
+function addAnim(el, tick, btn) {
+  const a = { el, tick, visible: !io, playing: !RM, last: 0 };
+  anims.push(a);
+  if (io) io.observe(el);
+  if (btn) {
+    const sync = () => { btn.textContent = a.playing ? 'Pause' : 'Play'; };
+    btn.addEventListener('click', () => { a.playing = !a.playing; a.last = 0; sync(); });
+    sync();
+  }
+  return a;
+}
+function frame(ts) {
+  for (const a of anims) {
+    if (a.visible && a.playing) {
+      const dt = a.last ? Math.min(0.05, (ts - a.last) / 1000) : 0.016;
+      a.last = ts;
+      a.tick(dt);
+    } else a.last = 0;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* Title block: which view is on screen */
+function initViewLabel() {
+  const views = $$('[data-view]');
+  const a = $('#tbView'), b = $('#tbScale');
+  let cur = -1, raf = 0;
+  function update() {
+    const y = window.innerHeight * 0.35;
+    let idx = 0;
+    views.forEach((s, i) => { if (s.getBoundingClientRect().top <= y) idx = i; });
+    if (idx === cur) return;
+    cur = idx;
+    a.textContent = views[idx].dataset.view;
+    b.textContent = views[idx].dataset.scale;
+  }
+  window.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+}
+
+/* Detail D: every joint is sold or kept */
+function initLoopStrip() {
+  const svg = $('#loopSvg');
+  const SZ = 30, Y = 84, TOP = 24, xs = [40, 110, 180, 250, 320];
+  S('line', { x1: 6, y1: TOP, x2: 354, y2: TOP, class: 'sk3', 'stroke-width': 1, 'stroke-dasharray': '2 4' }, svg);
+  T(svg, 6, 14, 'Sold: to robot makers', 'mono t3 cap');
+  const cells = xs.map(x => ({
+    x,
+    fill: S('rect', { x: x - SZ / 2, y: Y + SZ / 2, width: SZ, height: 0, class: 'ft' }, svg),
+    box: S('rect', { x: x - SZ / 2, y: Y - SZ / 2, width: SZ, height: SZ, class: 'fn sk2' }, svg),
+    p: 0, pend: 0, active: false, clock: 0, flip: 0
+  }));
+  T(svg, xs[0], 144, 'cell', 'mono t3 cap', 'middle');
+  T(svg, (xs[1] + xs[4]) / 2, 144, 'next cells, from kept joints', 'mono t3 cap', 'middle');
+  const dots = [];
+  let done = 0;
+  function setCell(c) {
+    const p = Math.min(1, c.p);
+    c.fill.setAttribute('y', Y + SZ / 2 - p * SZ);
+    c.fill.setAttribute('height', p * SZ);
+    c.box.setAttribute('class', c.active ? 'fn skr' : 'fn sk2');
+    c.box.setAttribute('stroke-width', c.active ? 2 : 1.2);
+    if (c.active) c.box.removeAttribute('stroke-dasharray'); else c.box.setAttribute('stroke-dasharray', '3 3');
+  }
+  function reset() {
+    dots.forEach(d => d.el.remove());
+    dots.length = 0;
+    done = 0;
+    cells.forEach((c, i) => { c.active = i === 0; c.p = i === 0 ? 1 : 0; c.pend = 0; c.clock = 0; c.flip = 0; setCell(c); });
+  }
+  function emit(c) {
+    c.flip = 1 - c.flip;
+    const el = S('circle', { r: 3.2, class: 'fr' }, svg);
+    const target = c.flip ? cells.find(k => !k.active && k.p + k.pend * 0.25 < 1) : null;
+    if (target) {
+      target.pend++;
+      dots.push({ el, kind: 'kept', target, t: 0, dur: 0.45 + Math.abs(target.x - c.x) / 240,
+        p0: [c.x, Y + SZ / 2], c: [(c.x + target.x) / 2, Y + SZ / 2 + 36], p1: [target.x, Y + SZ / 2] });
+    } else {
+      dots.push({ el, kind: 'sold', t: 0, dur: 0.6, p0: [c.x, Y - SZ / 2], c: [c.x + 4, (Y - SZ / 2 + TOP) / 2], p1: [c.x + 12, TOP] });
+    }
+  }
+  function tick(dt) {
+    if (cells.every(c => c.active)) { done += dt; if (done > 2.2) reset(); }
+    cells.forEach(c => { if (!c.active) return; c.clock += dt; if (c.clock >= 0.7) { c.clock -= 0.7; emit(c); } });
+    for (let i = dots.length - 1; i >= 0; i--) {
+      const d = dots[i];
+      d.t += dt / d.dur;
+      const k = Math.min(1, d.t), q = bez(d.p0, d.c, d.p1, k);
+      d.el.setAttribute('cx', q[0].toFixed(1));
+      d.el.setAttribute('cy', q[1].toFixed(1));
+      if (d.kind === 'sold') d.el.setAttribute('opacity', (1 - Math.max(0, k - 0.6) / 0.4).toFixed(2));
+      if (d.t >= 1) {
+        if (d.kind === 'kept') {
+          const tg = d.target;
+          tg.pend--; tg.p += 0.25;
+          if (tg.p >= 0.999) { tg.active = true; tg.clock = 0; }
+          setCell(tg);
+        }
+        d.el.remove();
+        dots.splice(i, 1);
+      }
+    }
+  }
+  reset();
+  for (let i = 0; i < 170; i++) tick(1 / 40);
+  addAnim(svg, tick, $('#loopPlay'));
+}
+
+/* Front elevation: the robot and the meter */
+const SHARES = { joints: 50, sensing: 14, compute: 12, structure: 7, battery: 7, other: 10 };   // illustrative split within McKinsey ranges
+const ORDER = ['joints', 'sensing', 'compute', 'structure', 'battery', 'other'];
+
+function initBot() {
+  const svg = $('#botSvg');
+  hatch(svg, 'hb');
+  const groups = {};
+  ['structure', 'battery', 'compute', 'other', 'joints', 'sensing'].forEach(id => {
+    groups[id] = S('g', { class: 'cat', 'data-cat': id }, svg);
+  });
+  const part = (g, tag, a) => S(tag, Object.assign({ class: 'pf', fill: 'url(#hb)' }, a), g);
+  const cap = (g, x1, y1, x2, y2, w) => {
+    const L = Math.hypot(x2 - x1, y2 - y1), a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    return part(g, 'rect', { x: mx - L / 2, y: my - w / 2, width: L, height: w, rx: w / 2, transform: `rotate(${a.toFixed(2)} ${mx} ${my})` });
+  };
+  const st = groups.structure;
+  cap(st, 180, 56, 180, 78, 10);
+  part(st, 'rect', { x: 150, y: 74, width: 60, height: 92, rx: 12 });
+  part(st, 'rect', { x: 153, y: 160, width: 54, height: 18, rx: 7 });
+  cap(st, 144, 84, 132, 139, 14); cap(st, 216, 84, 228, 139, 14);
+  cap(st, 132, 139, 128, 191, 12); cap(st, 228, 139, 232, 191, 12);
+  part(st, 'circle', { cx: 127, cy: 205, r: 8 }); part(st, 'circle', { cx: 233, cy: 205, r: 8 });
+  cap(st, 168, 173, 164, 227, 16); cap(st, 192, 173, 196, 227, 16);
+  cap(st, 164, 227, 162, 277, 14); cap(st, 196, 227, 198, 277, 14);
+  part(st, 'rect', { x: 146, y: 282, width: 26, height: 10, rx: 3 });
+  part(st, 'rect', { x: 188, y: 282, width: 26, height: 10, rx: 3 });
+  part(groups.battery, 'rect', { x: 166, y: 121, width: 28, height: 30, rx: 3 });
+  part(groups.battery, 'rect', { x: 175, y: 117, width: 10, height: 4, rx: 1 });
+  part(groups.compute, 'rect', { x: 163, y: 84, width: 34, height: 26, rx: 2 });
+  part(groups.compute, 'rect', { x: 173, y: 91, width: 14, height: 12, rx: 1 });
+  ['M197 100 C206 110 205 124 194 134', 'M163 100 C154 110 155 124 166 134'].forEach(d => {
+    S('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': 14 }, groups.other);
+    S('path', { d, class: 'pw' }, groups.other);
+  });
+  [[180, 66, 5.5], [144, 84, 8.5], [216, 84, 8.5], [132, 139, 7], [228, 139, 7], [128, 191, 5.5], [232, 191, 5.5],
+   [168, 173, 7.5], [192, 173, 7.5], [164, 227, 8], [196, 227, 8], [162, 277, 6], [198, 277, 6]]
+    .forEach(([cx, cy, r]) => part(groups.joints, 'circle', { cx, cy, r }));
+  part(groups.sensing, 'circle', { cx: 180, cy: 36, r: 21 });
+  S('rect', { x: 164, y: 28, width: 32, height: 11, rx: 5, class: 'fp sk', 'stroke-width': 1.2 }, groups.sensing);
+  S('circle', { cx: 173, cy: 33.5, r: 2.4, class: 'fi' }, groups.sensing);
+  S('circle', { cx: 187, cy: 33.5, r: 2.4, class: 'fi' }, groups.sensing);
+
+  const callout = (x, y, anchor, name, sub, ax, ay, bx, by) => {
+    S('line', { x1: ax, y1: ay, x2: bx, y2: by, class: 'sk2', 'stroke-width': 0.8 }, svg);
+    S('circle', { cx: bx, cy: by, r: 1.9, class: 'fi2' }, svg);
+    T(svg, x, y, name, 'tb', anchor);
+    if (sub) T(svg, x, y + 14, sub, 't3', anchor);
+  };
+  callout(6, 30, 'start', 'Sensing · 14%', 'and perception', 100, 34, 159, 36);
+  callout(6, 92, 'start', 'Compute · 12%', 'and control', 100, 96, 163, 97);
+  callout(6, 138, 'start', 'Battery · 7%', '', 100, 134, 166, 137);
+  callout(262, 80, 'start', 'Joints · 50%', 'actuators', 256, 84, 225, 84);
+  callout(262, 124, 'start', 'Other · 10%', 'wiring, cooling', 256, 128, 204, 116);
+  callout(262, 176, 'start', 'Structure · 7%', 'frame, links', 256, 180, 237, 176);
+
+  // Detail A: the right shoulder joint, drawn larger below
+  const detA = S('g', { class: 'det', 'aria-hidden': 'true' }, svg);
+  S('circle', { cx: 216, cy: 84, r: 15, class: 'fn sk', 'stroke-width': 1.2, 'stroke-dasharray': '4 3' }, detA);
+  S('line', { x1: 226.6, y1: 73.4, x2: 241.2, y2: 55.4, class: 'sk', 'stroke-width': 1 }, detA);
+  S('circle', { cx: 248, cy: 48, r: 10, class: 'fp sk', 'stroke-width': 1.4 }, detA);
+  T(detA, 248, 53, 'A', 'bl', 'middle');
+
+  const state = {};
+  ORDER.forEach(k => { state[k] = false; });
+  const meter = initMeter(state);
+  const chips = $$('#v-robot .chip');
+  function setCat(id, v) {
+    state[id] = v;
+    groups[id].classList.toggle('is-us', v);
+    const ch = chips.find(c => c.dataset.cat === id);
+    ch.setAttribute('aria-pressed', String(v));
+    ch.querySelector('.c-state').textContent = v ? 'US-made' : 'Foreign';
+    meter.update();
+  }
+  ORDER.forEach(id => groups[id].addEventListener('click', () => setCat(id, !state[id])));
+  chips.forEach(ch => ch.addEventListener('click', () => setCat(ch.dataset.cat, !state[ch.dataset.cat])));
+}
+
+function initMeter(state) {
+  const svg = $('#meterSvg');
+  hatch(svg, 'hm');
+  const X0 = 6, W = 348, Y = 22, H = 28;
+  const xp = p => X0 + W * p / 100;
+  S('rect', { x: X0, y: Y, width: W, height: H, class: 'fp sk', 'stroke-width': 1 }, svg);
+  const blocks = {};
+  ORDER.forEach(id => {
+    const w = W * SHARES[id] / 100;
+    const g = S('g', { class: 'mb' }, svg);
+    const r = S('rect', { x: 0, y: Y, width: w, height: H, fill: 'url(#hm)', class: 'sk', 'stroke-width': 1 }, g);
+    T(g, w / 2, Y - 6, SHARES[id] + '%', 'mono t2', 'middle');
+    blocks[id] = { g, r };
+  });
+  T(svg, X0, Y + H + 14, '0', 'mono t3', 'start');
+  T(svg, X0 + W, Y + H + 14, '100%', 'mono t3', 'end');
+  const ceil = S('g', { class: 'fade' }, svg);
+  const by = Y + H + 26;
+  S('line', { x1: xp(50), y1: Y - 3, x2: xp(50), y2: Y + H + 3, class: 'sk', 'stroke-width': 1.4, 'stroke-dasharray': '3 2' }, ceil);
+  S('path', { d: `M${xp(40)},${by - 5}V${by}H${xp(60)}V${by - 5}M${xp(50)},${by}V${by + 4}`, class: 'fn sk2', 'stroke-width': 1 }, ceil);
+  T(ceil, xp(50), by + 17, 'Ceiling with foreign joints: 50% (range 40–60%)', 't2', 'middle');
+  const th = S('g', { class: 'thl' }, svg);
+  S('line', { x1: 0, y1: Y - 5, x2: 0, y2: Y + H + 4, class: 'sk', 'stroke-width': 2.4 }, th);
+  const thT = T(th, 0, Y + H + 14, '', 'mono tb', 'middle');
+  let thr = 65;
+  function update() {
+    let dom = 0, acc = 0;
+    ORDER.forEach(id => { if (state[id]) dom += SHARES[id]; });
+    ORDER.filter(id => state[id]).concat(ORDER.filter(id => !state[id])).forEach(id => {
+      const b = blocks[id];
+      b.g.style.transform = `translate(${xp(acc)}px,0px)`;
+      b.r.setAttribute('class', state[id] ? 'fr skr' : 'sk');
+      acc += SHARES[id];
+    });
+    th.style.transform = `translate(${xp(thr)}px,0px)`;
+    thT.textContent = 'needs > ' + thr + '%';
+    ceil.style.opacity = state.joints ? '0' : '1';
+    $('#domPct').textContent = dom + '%';
+    let t, s;
+    if (dom > thr) { t = 'Above the line. It counts as a domestic end product.'; s = 'So it can get FCC authorization, as long as it is built in the US.'; }
+    else if (dom === thr) { t = 'Exactly ' + thr + '% is not enough.'; s = 'The US-made share has to be more than ' + thr + '%.'; }
+    else {
+      t = 'Below the line. A new model can\u2019t get FCC authorization.';
+      s = 'It needs more than ' + thr + '% US-made parts, or a Conditional Approval.' + (state.joints ? '' : ' With foreign joints it can\u2019t get past 50%.');
+    }
+    $('#verdictT').textContent = t;
+    $('#verdictS').textContent = s;
+  }
+  const b65 = $('#th65'), b75 = $('#th75');
+  const setThr = v => { thr = v; b65.setAttribute('aria-pressed', String(v === 65)); b75.setAttribute('aria-pressed', String(v === 75)); update(); };
+  b65.addEventListener('click', () => setThr(65));
+  b75.addEventListener('click', () => setThr(75));
+  update();
+  return { update };
+}
+
+/* Detail A: exploded joint */
+function initJoint() {
+  const svg = $('#jointSvg');
+  hatch(svg, 'hj');
+  const CX = 96, LX = 200;
+  const P = [
+    { name: 'Driver board', sub: '15–20% · vitamin', made: false, rx: 58, h: 6, kind: 'board', ly: 26, yE: 19, yA: 128 },
+    { name: 'Encoders', sub: '5–10% · bought for now', made: false, rx: 46, h: 5, kind: 'enc', ly: 70, yE: 63.5, yA: 134 },
+    { name: 'Frameless motor', sub: '10–20% · bought for now', made: false, rx: 62, h: 22, kind: 'motor', ly: 116, yE: 101, yA: 139 },
+    { name: 'Wave generator', sub: 'oval cam · input', made: true, rx: 40, h: 8, kind: 'cam', ly: 184, yE: 176, yA: 161 },
+    { name: 'Flexspline', sub: 'flexing cup · output', made: true, rx: 48, h: 28, kind: 'cup', ly: 224, yE: 206, yA: 169 },
+    { name: 'Ring gear', sub: 'circular spline · fixed', made: true, rx: 58, h: 12, kind: 'ring', ly: 270, yE: 262, yA: 197 },
+    { name: 'Output bearing', sub: '10–20% w/ casing · vitamin', made: false, rx: 62, h: 10, kind: 'bearing', ly: 336, yE: 327, yA: 209 }
+  ];
+  const gy0 = 152, gy1 = 314;
+  S('path', { d: `M${LX - 5},${gy0}H${LX - 10}V${gy1}H${LX - 5}`, class: 'fn skr', 'stroke-width': 1.8 }, svg);
+  T(svg, LX, gy0 + 4, 'Strain-wave gear · 30–50%', 'tb tr');
+  T(svg, LX, gy1 - 14, 'We\u2019d cut and heat-treat', 'tr');
+  T(svg, LX, gy1, 'this in the US.', 'tr');
+  // Detail B: the gear, drawn from above below
+  S('line', { x1: 186, y1: 158, x2: LX - 10, y2: 158, class: 'sk', 'stroke-width': 1 }, svg);
+  S('circle', { cx: 176, cy: 158, r: 10, class: 'fp sk', 'stroke-width': 1.4 }, svg);
+  T(svg, 176, 163, 'B', 'bl', 'middle');
+  const layer = S('g', null, svg);
+  const lead = S('g', null, svg);
+  const front = (rx, ry, x) => ry * Math.sqrt(Math.max(0, 1 - Math.pow((x - CX) / rx, 2)));
+  function drawPart(p) {
+    const g = S('g', null, layer);
+    const rx = p.rx, ry = rx * 0.26, h = p.h, m = p.made, sw = m ? 1.6 : 1.2;
+    const side = S('path', { d: `M${CX - rx},0V${h}A${rx},${ry} 0 0 0 ${CX + rx},${h}V0Z`, 'stroke-width': sw }, g);
+    if (m) side.setAttribute('class', 'ft skr'); else { side.setAttribute('class', 'sk'); side.setAttribute('fill', 'url(#hj)'); }
+    const cry = p.kind === 'cam' ? ry * 0.72 : ry;
+    S('ellipse', { cx: CX, cy: 0, rx, ry: cry, class: m ? 'ft skr' : 'ff sk', 'stroke-width': sw }, g);
+    if (p.kind === 'board') {
+      S('rect', { x: CX - 28, y: -5, width: 14, height: 6, class: 'fi' }, g);
+      S('rect', { x: CX - 8, y: -8, width: 18, height: 8, class: 'fi' }, g);
+      S('rect', { x: CX + 17, y: -3, width: 9, height: 5, class: 'fi' }, g);
+    } else if (p.kind === 'enc') {
+      for (let i = 0; i < 24; i++) {
+        const a = i / 24 * TAU, c = Math.cos(a), s = Math.sin(a);
+        S('line', { x1: CX + c * rx * 0.7, y1: s * ry * 0.7, x2: CX + c * rx * 0.92, y2: s * ry * 0.92, class: 'sk', 'stroke-width': 1 }, g);
+      }
+    } else if (p.kind === 'motor') {
+      S('ellipse', { cx: CX, cy: 0, rx: rx * 0.56, ry: ry * 0.56, class: 'fp sk', 'stroke-width': 1.2 }, g);
+    } else if (p.kind === 'cam') {
+      S('ellipse', { cx: CX, cy: 0, rx: rx * 0.3, ry: cry * 0.3, class: 'fp skr', 'stroke-width': 1.2 }, g);
+    } else if (p.kind === 'cup') {
+      S('ellipse', { cx: CX, cy: 0, rx: rx - 5, ry: ry - 1.3, class: 'fp skr', 'stroke-width': 1.2 }, g);
+      for (let x = CX - rx + 4; x <= CX + rx - 4; x += 5) {
+        const y0 = front(rx, ry, x);
+        S('line', { x1: x, y1: y0 + 1.5, x2: x, y2: y0 + 9, class: 'skr', 'stroke-width': 1 }, g);
+      }
+    } else if (p.kind === 'ring') {
+      S('ellipse', { cx: CX, cy: 0, rx: rx * 0.8, ry: ry * 0.8, class: 'fp skr', 'stroke-width': 1.2 }, g);
+      for (let i = 0; i < 40; i++) {
+        const a = i / 40 * TAU, c = Math.cos(a), s = Math.sin(a);
+        S('line', { x1: CX + c * rx * 0.8, y1: s * ry * 0.8, x2: CX + c * rx * 0.74, y2: s * ry * 0.74, class: 'skr', 'stroke-width': 1 }, g);
+      }
+    } else if (p.kind === 'bearing') {
+      S('ellipse', { cx: CX, cy: 0, rx: rx * 0.66, ry: ry * 0.66, class: 'fp sk', 'stroke-width': 1.2 }, g);
+      for (let i = 0; i < 16; i++) {
+        const a = i / 16 * TAU;
+        S('circle', { cx: CX + Math.cos(a) * rx * 0.83, cy: Math.sin(a) * ry * 0.83, r: 2.1, class: 'fp sk', 'stroke-width': 1 }, g);
+      }
+    }
+    return g;
+  }
+  P.slice().reverse().forEach(p => { p.g = drawPart(p); });
+  P.forEach(p => {
+    p.line = S('line', { class: 'sk2', 'stroke-width': 0.8 }, lead);
+    p.dot = S('circle', { r: 1.9, class: 'fi2' }, lead);
+    T(svg, LX, p.ly, p.name, 'tb');
+    T(svg, LX, p.ly + 14, p.sub, 't3');
+  });
+  const inp = $('#explode'), out = $('#explodeOut');
+  function setE(v) {
+    const k = ease(v);
+    P.forEach(p => {
+      const y = lerp(p.yA, p.yE, k), ym = (y + p.h / 2).toFixed(1), x1 = CX + p.rx + 2;
+      p.g.setAttribute('transform', `translate(0,${y.toFixed(2)})`);
+      p.line.setAttribute('x1', x1); p.line.setAttribute('y1', ym);
+      p.line.setAttribute('x2', p.made ? LX - 14 : LX - 6); p.line.setAttribute('y2', p.ly - 4);
+      p.dot.setAttribute('cx', x1); p.dot.setAttribute('cy', ym);
+    });
+    out.textContent = v > 0.98 ? 'Exploded' : v < 0.02 ? 'Assembled' : Math.round(v * 100) + '% apart';
+  }
+  inp.addEventListener('input', () => setE(inp.value / 100));
+  setE(inp.value / 100);
+}
+
+/* Detail B: the gear turning (top view) */
+function initCam() {
+  const svg = $('#camSvg');
+  const cx = 140, cy = 150, Rout = 100, Rroot = 88, h = 7, Rtip = Rroot - h, e = 7, r0 = Rtip - e, Nc = 32, Nf = 30;
+  const Tf = x => clamp(0.5 + 0.95 * Math.cos(x), 0, 1);
+  const circ = R => `M${cx - R},${cy}a${R},${R} 0 1,0 ${2 * R},0a${R},${R} 0 1,0 ${-2 * R},0Z`;
+  const loop = (fn, n) => {
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const th = i / n * TAU, r = fn(th);
+      d += (i ? 'L' : 'M') + (cx + r * Math.cos(th)).toFixed(1) + ',' + (cy + r * Math.sin(th)).toFixed(1);
+    }
+    return d + 'Z';
+  };
+  S('path', { d: circ(Rout) + loop(th => Rroot - h * Tf(Nc * th), 640), class: 'ft skr', 'fill-rule': 'evenodd', 'stroke-width': 1.3 }, svg);
+  const flex = S('path', { class: 'fp skr', 'fill-rule': 'evenodd', 'stroke-width': 1.3 }, svg);
+  const cam = S('g', null, svg);
+  S('ellipse', { cx, cy, rx: r0 + e - 7, ry: r0 - e - 7, class: 'fp skr', 'stroke-width': 1.6 }, cam);
+  S('ellipse', { cx, cy, rx: r0 + e - 12, ry: r0 - e - 12, class: 'fn skr', 'stroke-width': 0.8, 'stroke-dasharray': '2 3' }, cam);
+  S('line', { x1: cx, y1: cy, x2: cx + r0 + e - 22, y2: cy, class: 'skr', 'stroke-width': 3, 'stroke-linecap': 'round' }, cam);
+  S('circle', { cx, cy, r: 9, class: 'fp skr', 'stroke-width': 1.6 }, cam);
+  const dot = S('circle', { r: 4.4, class: 'fi skp', 'stroke-width': 1.5 }, svg);
+  const lbl = (x, y, a, l1, l2) => { T(svg, x, y, l1, 'tb', a); T(svg, x, y + 14, l2, 't3', a); };
+  const ld = (x1, y1, x2, y2) => {
+    S('line', { x1, y1, x2, y2, class: 'sk2', 'stroke-width': 0.8 }, svg);
+    S('circle', { cx: x2, cy: y2, r: 1.9, class: 'fi2' }, svg);
+  };
+  lbl(8, 16, 'start', 'Ring gear', 'circular spline · fixed');
+  ld(44, 36, cx - 66, cy - 66);
+  lbl(272, 16, 'end', 'Marker dot', 'rides on the cup');
+  lbl(8, 266, 'start', 'Wave generator', 'oval cam · input, fast');
+  ld(44, 252, cx - 18, cy + 18);
+  lbl(272, 266, 'end', 'Flexspline', 'cup · output, slow');
+  ld(236, 252, cx + 50, cy + 50);
+  let phi = 0.55;
+  function draw() {
+    const psi = -phi * (Nc - Nf) / Nf;
+    const outer = loop(th => r0 + e * Math.cos(2 * (th - phi)) + h * Tf(Nf * (th - psi) + Math.PI), 480);
+    const inner = loop(th => r0 + e * Math.cos(2 * (th - phi)) - 6, 120);
+    flex.setAttribute('d', outer + inner);
+    cam.setAttribute('transform', `rotate(${(phi * 180 / Math.PI).toFixed(2)} ${cx} ${cy})`);
+    const rr = r0 + e * Math.cos(2 * (psi - phi)) - 3;
+    dot.setAttribute('cx', (cx + rr * Math.cos(psi)).toFixed(1));
+    dot.setAttribute('cy', (cy + rr * Math.sin(psi)).toFixed(1));
+  }
+  draw();
+  addAnim(svg, dt => { phi += dt * TAU * 0.25; draw(); }, $('#camPlay'));
+}
+
+/* View C: one production cell, top view */
+function initCell() {
+  const svg = $('#cellSvg');
+  hatch(svg, 'hc');
+  const ST = [
+    { x: 42, y: 168, w: 56, h: 34, label: 'Blanks in', lx: 42, ly: 200 },
+    { x: 82, y: 56, w: 84, h: 40, label: '1 Machining', lx: 82, ly: 28 },
+    { x: 190, y: 50, w: 84, h: 40, label: '2 Gear cutting', lx: 190, ly: 22 },
+    { x: 298, y: 56, w: 84, h: 40, label: '3 Heat treat', lx: 298, ly: 28 },
+    { x: 330, y: 168, w: 76, h: 40, label: '4 Assembly', lx: 330, ly: 140 },
+    { x: 190, y: 282, w: 92, h: 40, label: '5 Inspect · test', lx: 190, ly: 318 },
+    { x: 74, y: 280, w: 72, h: 34, label: 'Joints out', lx: 74, ly: 314 }
+  ];
+  const PROC = [0, 1.0, 1.0, 1.25, 1.0, 0.8, 0];
+  const OWNER = [0, 0, 1, 1, 1, 0];
+  const L1 = 66, L2 = 66;
+  const OUT = 6, ASM = 4;
+  S('path', { d: 'M42,151 L82,76 M124,50 H148 M232,50 H256 M266,76 L294,148 M300,188 L215,262 M144,282 H110',
+    class: 'fn sk3', 'stroke-width': 1, 'stroke-dasharray': '2 4' }, svg);
+  ST.forEach((s, i) => {
+    s.rect = S('rect', { x: s.x - s.w / 2, y: s.y - s.h / 2, width: s.w, height: s.h, class: 'fp sk', 'stroke-width': 1.3 }, svg);
+    T(svg, s.lx, s.ly, s.label, 'mono t2 cap', 'middle');
+    if (i === 0) for (let k = 0; k < 3; k++) S('rect', { x: s.x - 22 + k * 4, y: s.y - 9 + k * 4, width: 11, height: 11, class: 'fp sk2', 'stroke-width': 1 }, svg);
+    if (i === 3) for (let k = 0; k < 3; k++) S('path', { d: `M${s.x - 34 + k * 6},${s.y + 12} q3,-5 0,-10 q-3,-5 0,-10`, class: 'fn sk3', 'stroke-width': 1 }, svg);
+  });
+  const bins = [['motor', 210], ['encoders', 229], ['driver', 248], ['bearing', 267]].map(([name, y]) => {
+    S('rect', { x: 348, y: y - 7, width: 20, height: 14, fill: 'url(#hc)', class: 'sk', 'stroke-width': 1 }, svg);
+    T(svg, 342, y + 4, name, 't3', 'end');
+    return [358, y];
+  });
+  T(svg, 368, 200, 'bought', 'mono t3 cap', 'end');
+  const arms = [[140, 168, 0], [240, 168, 1]].map(([bx, by, i]) => {
+    const g = S('g', null, svg);
+    const l1o = S('line', { class: 'sk', 'stroke-width': 10, 'stroke-linecap': 'round' }, g);
+    const l1i = S('line', { class: 'skp', 'stroke-width': 6.5, 'stroke-linecap': 'round' }, g);
+    const l2o = S('line', { class: 'sk', 'stroke-width': 8, 'stroke-linecap': 'round' }, g);
+    const l2i = S('line', { class: 'skp', 'stroke-width': 4.5, 'stroke-linecap': 'round' }, g);
+    const elb = S('circle', { r: 4, class: 'fp sk', 'stroke-width': 1.3 }, g);
+    S('circle', { cx: bx, cy: by, r: 13, class: 'fp sk', 'stroke-width': 1.5 }, g);
+    T(g, bx, by + 4, String(i + 1), 'mono tb', 'middle');
+    const grip = S('circle', { r: 6, class: 'fn sk', 'stroke-width': 1.5 }, g);
+    return { i, base: [bx, by], tip: [bx + (i ? -40 : 40), by - 30], task: null, l1o, l1i, l2o, l2i, elb, grip };
+  });
+  // Detail D: the arms run on our joints, and the next cell is built from them
+  const detD = S('g', { class: 'det', 'aria-hidden': 'true' }, svg);
+  S('circle', { cx: 140, cy: 168, r: 22, class: 'fn sk', 'stroke-width': 1.2, 'stroke-dasharray': '4 3' }, detD);
+  S('line', { x1: 122.3, y1: 181, x2: 42.1, y2: 240.1, class: 'sk', 'stroke-width': 1 }, detD);
+  S('circle', { cx: 34, cy: 246, r: 10, class: 'fp sk', 'stroke-width': 1.4 }, detD);
+  T(detD, 34, 251, 'D', 'bl', 'middle');
+  const partsLayer = S('g', null, svg);
+  const flyLayer = S('g', null, svg);
+  const parts = [], flies = [];
+  let count = 0, spawn = 1;
+  const countEl = $('#cellCount');
+  const pt = i => [ST[i].x, ST[i].y];
+  const free = i => !parts.some(p => p.pos === i || p.dest === i);
+
+  function makePart() {
+    const g = S('g', null, partsLayer);
+    const v = [
+      S('rect', { x: -6, y: -6, width: 12, height: 12, class: 'fp sk', 'stroke-width': 1.4 }, g),
+      S('rect', { x: -6, y: -6, width: 12, height: 12, class: 'fr skr', 'stroke-width': 1 }, g),
+      S('g', null, g),
+      S('g', null, g),
+      S('g', null, g)
+    ];
+    S('circle', { r: 7, class: 'fr skr', 'stroke-width': 1 }, v[2]);
+    S('circle', { r: 7.5, class: 'fn skr', 'stroke-width': 2.2, 'stroke-dasharray': '1.6 1.6' }, v[2]);
+    S('circle', { r: 7, class: 'fr sk', 'stroke-width': 1.4 }, v[3]);
+    S('circle', { r: 7.5, class: 'fn sk', 'stroke-width': 2.2, 'stroke-dasharray': '1.6 1.6' }, v[3]);
+    S('circle', { r: 10, fill: 'url(#hc)', class: 'sk', 'stroke-width': 1.2 }, v[4]);
+    S('circle', { r: 6, class: 'fr sk', 'stroke-width': 1 }, v[4]);
+    const check = S('path', { d: 'M-4,0 l3,3 l6,-7', class: 'fn skp', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, v[4]);
+    return { g, v, check, pos: 0, dest: null, claimed: false, state: 'ready', timer: 0, stage: 0, fade: 0, xy: pt(0) };
+  }
+  function show(p) {
+    const vis = Math.min(p.stage, 4);
+    p.v.forEach((el, i) => el.setAttribute('display', i === vis ? 'inline' : 'none'));
+    p.check.setAttribute('display', p.stage >= 5 ? 'inline' : 'none');
+    p.g.setAttribute('transform', `translate(${p.xy[0].toFixed(1)},${p.xy[1].toFixed(1)})`);
+  }
+  function ik(arm) {
+    const [bx, by] = arm.base;
+    let dx = arm.tip[0] - bx, dy = arm.tip[1] - by, d = Math.hypot(dx, dy);
+    const mx = L1 + L2 - 0.5;
+    if (d > mx) { dx *= mx / d; dy *= mx / d; d = mx; }
+    d = Math.max(d, 10);
+    const th = Math.atan2(dy, dx);
+    const al = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
+    const a = th + (arm.i ? al : -al);
+    const ex = bx + L1 * Math.cos(a), ey = by + L1 * Math.sin(a), tx = bx + dx, ty = by + dy;
+    [arm.l1o, arm.l1i].forEach(l => { l.setAttribute('x1', bx); l.setAttribute('y1', by); l.setAttribute('x2', ex.toFixed(1)); l.setAttribute('y2', ey.toFixed(1)); });
+    [arm.l2o, arm.l2i].forEach(l => { l.setAttribute('x1', ex.toFixed(1)); l.setAttribute('y1', ey.toFixed(1)); l.setAttribute('x2', tx.toFixed(1)); l.setAttribute('y2', ty.toFixed(1)); });
+    arm.elb.setAttribute('cx', ex.toFixed(1)); arm.elb.setAttribute('cy', ey.toFixed(1));
+    arm.grip.setAttribute('cx', tx.toFixed(1)); arm.grip.setAttribute('cy', ty.toFixed(1));
+    arm.grip.setAttribute('class', arm.task && arm.task.phase === 'carry' ? 'fn skr' : 'fn sk');
+  }
+  function tick(dt) {
+    spawn += dt;
+    if (spawn > 1.1 && free(0)) { spawn = 0; const p = makePart(); parts.push(p); }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      if (p.state === 'proc') {
+        p.timer -= dt;
+        if (p.timer <= 0) { p.state = 'ready'; p.stage = Math.max(p.stage, p.pos); }
+      } else if (p.state === 'out') {
+        p.fade += dt;
+        p.g.setAttribute('opacity', Math.max(0, 1 - p.fade / 1.1).toFixed(2));
+        if (p.fade > 1.1) { p.g.remove(); parts.splice(i, 1); }
+      }
+    }
+    arms.forEach(arm => {
+      if (!arm.task) {
+        const c = parts.filter(p => p.state === 'ready' && !p.claimed && p.pos >= 0 && p.pos < OUT && OWNER[p.pos] === arm.i && free(p.pos + 1))
+          .sort((a, b) => b.pos - a.pos)[0];
+        if (c) { c.claimed = true; c.dest = c.pos + 1; arm.task = { part: c, from: c.pos, to: c.pos + 1, phase: 'reach', t: 0, start: arm.tip.slice() }; }
+      }
+      const tk = arm.task;
+      if (tk) {
+        tk.t += dt;
+        if (tk.phase === 'reach') {
+          const k = ease(Math.min(1, tk.t / 0.42)), a = tk.start, b = pt(tk.from);
+          arm.tip = [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
+          if (tk.t >= 0.42) { tk.phase = 'carry'; tk.t = 0; tk.part.pos = -1; tk.part.state = 'carried'; }
+        } else {
+          const k = ease(Math.min(1, tk.t / 0.62)), a = pt(tk.from), b = pt(tk.to);
+          arm.tip = [lerp(a[0], b[0], k), lerp(a[1], b[1], k)];
+          tk.part.xy = arm.tip.slice();
+          if (tk.t >= 0.62) {
+            const p = tk.part;
+            p.pos = tk.to; p.dest = null; p.claimed = false; p.xy = pt(tk.to);
+            if (tk.to === OUT) { p.state = 'out'; p.fade = 0; count++; countEl.textContent = count; }
+            else { p.state = 'proc'; p.timer = PROC[tk.to]; }
+            if (tk.to === ASM) bins.forEach((b, j) => flies.push({ el: S('rect', { width: 7, height: 7, fill: 'url(#hc)', class: 'sk', 'stroke-width': 1 }, flyLayer), from: b, t: -j * 0.12 }));
+            arm.task = null;
+          }
+        }
+      }
+      ik(arm);
+    });
+    for (let i = flies.length - 1; i >= 0; i--) {
+      const f = flies[i];
+      f.t += dt;
+      const k = ease(clamp(f.t / 0.55, 0, 1)), to = pt(ASM);
+      f.el.setAttribute('x', (lerp(f.from[0], to[0], k) - 3.5).toFixed(1));
+      f.el.setAttribute('y', (lerp(f.from[1], to[1], k) - 3.5).toFixed(1));
+      if (f.t >= 0.6) { f.el.remove(); flies.splice(i, 1); }
+    }
+    ST.forEach((s, i) => {
+      const busy = i > 0 && i < OUT && parts.some(p => p.pos === i && p.state === 'proc');
+      s.rect.setAttribute('class', busy ? 'ft skr' : 'fp sk');
+    });
+    parts.forEach(show);
+  }
+  for (let i = 0; i < 560; i++) tick(1 / 40);
+  count = 0; countEl.textContent = '0';
+  addAnim(svg, tick, $('#cellPlay'));
+}
+
+/* Detail D: closure ladder, value stack and the next cell's cash cost */
+function initClosure() {
+  const svg = $('#barSvg');
+  hatch(svg, 'h5');
+  const SH = [18, 15, 9, 14, 19];
+  const X = 58, W = 40, Y0 = 360, HT = 340;
+  const yp = p => Y0 - HT * p / 100;
+  let acc = 0;
+  const segs = SH.map(v => {
+    const r = S('rect', { x: X, y: yp(acc + v), width: W, height: HT * v / 100, fill: 'url(#h5)', class: 'sk', 'stroke-width': 1 }, svg);
+    T(svg, X + W + 7, yp(acc + v / 2) + 4, v + '%', 'mono t2');
+    acc += v;
+    return r;
+  });
+  S('rect', { x: X, y: yp(100), width: W, height: HT * 0.25, fill: 'url(#h5)', class: 'sk', 'stroke-width': 1 }, svg);
+  T(svg, X + W + 7, yp(87.5) + 4, '25%', 'mono t2');
+  S('rect', { x: X, y: yp(100), width: W, height: HT, class: 'fn sk', 'stroke-width': 1.6 }, svg);
+  S('line', { x1: 2, y1: yp(40), x2: X + W + 4, y2: yp(40), class: 'sk', 'stroke-width': 1.6, 'stroke-dasharray': '5 3' }, svg);
+  T(svg, 2, yp(40) - 7, 'Gate 2', 'mono tb cap');
+  T(svg, 2, yp(40) + 15, '40%', 'mono t2');
+  T(svg, 2, Y0 + 14, '0%', 'mono t3');
+  T(svg, 2, yp(100) + 4, '100%', 'mono t3');
+  const top = S('line', { x1: X - 6, x2: X + W + 6, y1: Y0, y2: Y0, class: 'skr', 'stroke-width': 3 }, svg);
+  const rungs = $$('#v-next .rung');
+  const cum = [0, 18, 33, 42, 56, 75];
+  // Illustrative: in-house parts cost half their market price (m). Cash cost k = (1 - c) + c * m.
+  const M = 0.5;
+  const chip = (sel, met, yes, no) => { const el = $(sel); el.classList.toggle('met', met); el.querySelector('span').textContent = met ? yes : no; };
+  let level = 0, timer = 0;
+  const pct = v => (Math.round(v * 10) / 10) + '%';
+  function set(n) {
+    level = n;
+    rungs.forEach((b, i) => b.setAttribute('aria-pressed', String(i < n)));
+    segs.forEach((r, i) => r.setAttribute('class', i < n ? 'fr skr' : 'sk'));
+    const c = cum[n];
+    top.setAttribute('y1', yp(c)); top.setAttribute('y2', yp(c));
+    top.setAttribute('opacity', n ? '1' : '0');
+    $('#clC').textContent = c + '%';
+    $('#clSeq').textContent = n ? 'Climbed: ' + cum.slice(1, n + 1).join(' → ') : 'Tap the bottom rung to start.';
+    chip('#g2', c >= 40, 'Meets Gate 2: 40% or more', 'Gate 2 needs 40% or more');
+    const cash = (1 - c / 100) + (c / 100) * M;
+    $('#clCash').textContent = pct(cash * 100);
+    $('#clF').textContent = `= (1 − ${(c / 100).toFixed(2)}) + ${(c / 100).toFixed(2)} × 0.5 = ${cash.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}`;
+    $('#clMini').style.width = (cash * 100) + '%';
+
+    const hb = $('#clHb'); if (hb) hb.style.width = c + '%';
+  }
+  rungs.forEach((b, i) => b.addEventListener('click', () => { clearInterval(timer); set(level > i ? i : i + 1); }));
+  $('#clReset').addEventListener('click', () => { clearInterval(timer); set(0); });
+  $('#clAll').addEventListener('click', () => {
+    clearInterval(timer);
+    if (RM) { set(5); return; }
+    set(0);
+    timer = setInterval(() => { if (level >= 5) clearInterval(timer); else set(level + 1); }, 450);
+  });
+  set(0);
+}
+
+function init() {
+  [initViewLabel, initBot, initJoint, initCam, initCell, initLoopStrip, initClosure]
+    .forEach(f => { try { f(); } catch (err) { console.error(f.name, err); } });
+  requestAnimationFrame(frame);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+</body>
+</html>
